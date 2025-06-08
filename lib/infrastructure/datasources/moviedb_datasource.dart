@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:myapp/config/constants/environment.dart';
 import 'package:myapp/domain/datasources/movies_datasource.dart';
 import 'package:myapp/domain/entities/movie.dart';
+import 'package:myapp/infrastructure/mappers/movie_mapper.dart';
+import 'package:myapp/infrastructure/models/moviedb/moviedb_reponse.dart';
 
 class MoviedbDatasource extends MoviesDatasource{
   
@@ -21,8 +23,14 @@ class MoviedbDatasource extends MoviesDatasource{
 
     final response = await dio.get('/movie/now_playing');
 
-    final List<Movie> movies;
+    final movieDBResponse = MovieDbResponse.fromJson(response.data);
 
-    return [];
+    final List<Movie> movies = movieDBResponse.results
+    .where((moviedb)=> moviedb.backdropPath !='no-backdrop-poster' || moviedb.posterPath != 'no-poster')
+    .map(
+      (moviedb) => MovieMapper.movieDBToEntity(moviedb)
+    ).toList();
+
+    return movies;
   }
 }
